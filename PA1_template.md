@@ -1,15 +1,10 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
-    self_contained: false
----
+# Reproducible Research: Peer Assessment 1
  
-```{r}
+
+```r
 library(knitr)
 opts_chunk$set(fig.path="figure/")
-``` 
+```
  
 ## Loading and preprocessing the data
 
@@ -29,24 +24,42 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 
 ### Loading the activity monitoring data
 
-```{r DataLoad, echo=TRUE}
 
+```r
 ActivityData <- read.csv(file = "./data/activity.csv", stringsAsFactors = FALSE)
 
 summary(ActivityData)
+```
 
+```
+##      steps            date              interval     
+##  Min.   :  0.00   Length:17568       Min.   :   0.0  
+##  1st Qu.:  0.00   Class :character   1st Qu.: 588.8  
+##  Median :  0.00   Mode  :character   Median :1177.5  
+##  Mean   : 37.38                      Mean   :1177.5  
+##  3rd Qu.: 12.00                      3rd Qu.:1766.2  
+##  Max.   :806.00                      Max.   :2355.0  
+##  NA's   :2304
+```
+
+```r
 str(ActivityData)
+```
 
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : chr  "2012-10-01" "2012-10-01" "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
 
 ### Processing the activity monitoring data
 
 The date variable in the Activity Monitoring Data is loaded from the csv file as character (chr), convert to a date (Date) format
 
-```{r DataPrep, echo=TRUE}
 
+```r
 ActivityData$date <- as.Date(ActivityData$date, format = "%Y-%m-%d")
-
 ```
 
 
@@ -54,35 +67,34 @@ ActivityData$date <- as.Date(ActivityData$date, format = "%Y-%m-%d")
 
 ### Calculate the total number of steps taken per day
 
-```{r StepsPerDay, echo=TRUE}
 
+```r
 StepsPerDay <- aggregate(ActivityData$steps, by = list(ActivityData$date), FUN = sum, na.rm = TRUE)
 
 library(data.table)
 ### Set the column names
 setnames(StepsPerDay, c("date", "steps"))
-
 ```
 
 ### Histogram of the total number of steps taken per day
 
-```{r Histogram, echo=TRUE}
 
+```r
 hist(StepsPerDay$steps, col = "red", main = "Total Number of Steps taken Each Day", xlab = "Steps")
-
 ```
 
-### Calculate the mean and median of the total number of steps taken per day
-```{r MeanMedianValues, echo=TRUE}
+![](figure/Histogram-1.png) 
 
+### Calculate the mean and median of the total number of steps taken per day
+
+```r
 meanValue <- mean(StepsPerDay$steps)
 
 medianValue <- median(StepsPerDay$steps)
-
 ```
 
-The mean of the total number of steps taken per day is **`r meanValue`**.  
-The median of the total number of steps taken per day is **`r medianValue`**.
+The mean of the total number of steps taken per day is **9354.2295082**.  
+The median of the total number of steps taken per day is **10395**.
 
 ## What is the average daily activity pattern?
 

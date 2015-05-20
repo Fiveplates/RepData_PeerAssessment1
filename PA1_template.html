@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title>Reproducible Research: Peer Assessment 1</title>
+
+<script src="PA1_template_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="PA1_template_files/bootstrap-2.3.2/css/bootstrap.min.css" rel="stylesheet" />
+<link href="PA1_template_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
+<script src="PA1_template_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="PA1_template_files/highlight/default.css"
+      type="text/css" />
+<script src="PA1_template_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Reproducible Research: Peer Assessment 1</h1>
+</div>
+
+
+<pre class="r"><code>library(knitr)
+opts_chunk$set(fig.path=&quot;figure/&quot;)</code></pre>
+<div id="loading-and-preprocessing-the-data" class="section level2">
+<h2>Loading and preprocessing the data</h2>
+<div id="data" class="section level3">
+<h3>Data</h3>
+<p>The data for this assignment can be downloaded from the course web site:</p>
+<ul>
+<li>Dataset: <a href="https://d396qusza40orc.cloudfront.net/repdata/data/activity.zip" title="Activity Monitoring Data">Activity monitoring data</a> [52K]</li>
+</ul>
+<p>The variables included in this dataset are:</p>
+<ul>
+<li>steps: Number of steps taking in a 5-minute interval (missing values are coded as NA)<br /></li>
+<li>date: The date on which the measurement was taken in YYYY-MM-DD format<br /></li>
+<li>interval: Identifier for the 5-minute interval in which measurement was taken</li>
+</ul>
+<p>The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.</p>
+</div>
+<div id="loading-the-activity-monitoring-data" class="section level3">
+<h3>Loading the activity monitoring data</h3>
+<pre class="r"><code>ActivityData &lt;- read.csv(file = &quot;./data/activity.csv&quot;, stringsAsFactors = FALSE)
+
+summary(ActivityData)</code></pre>
+<pre><code>##      steps            date              interval     
+##  Min.   :  0.00   Length:17568       Min.   :   0.0  
+##  1st Qu.:  0.00   Class :character   1st Qu.: 588.8  
+##  Median :  0.00   Mode  :character   Median :1177.5  
+##  Mean   : 37.38                      Mean   :1177.5  
+##  3rd Qu.: 12.00                      3rd Qu.:1766.2  
+##  Max.   :806.00                      Max.   :2355.0  
+##  NA&#39;s   :2304</code></pre>
+<pre class="r"><code>str(ActivityData)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : chr  &quot;2012-10-01&quot; &quot;2012-10-01&quot; &quot;2012-10-01&quot; &quot;2012-10-01&quot; ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...</code></pre>
+</div>
+<div id="processing-the-activity-monitoring-data" class="section level3">
+<h3>Processing the activity monitoring data</h3>
+<p>The date variable in the Activity Monitoring Data is loaded from the csv file as character (chr), convert to a date (Date) format</p>
+<pre class="r"><code>ActivityData$date &lt;- as.Date(ActivityData$date, format = &quot;%Y-%m-%d&quot;)</code></pre>
+</div>
+</div>
+<div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
+<h2>What is mean total number of steps taken per day?</h2>
+<div id="calculate-the-total-number-of-steps-taken-per-day" class="section level3">
+<h3>Calculate the total number of steps taken per day</h3>
+<pre class="r"><code>StepsPerDay &lt;- aggregate(ActivityData$steps, by = list(ActivityData$date), FUN = sum, na.rm = TRUE)
+
+library(data.table)
+### Set the column names
+setnames(StepsPerDay, c(&quot;date&quot;, &quot;steps&quot;))</code></pre>
+</div>
+<div id="histogram-of-the-total-number-of-steps-taken-per-day" class="section level3">
+<h3>Histogram of the total number of steps taken per day</h3>
+<pre class="r"><code>hist(StepsPerDay$steps, col = &quot;red&quot;, main = &quot;Total Number of Steps taken Each Day&quot;, xlab = &quot;Steps&quot;)</code></pre>
+<p><img src="figure/Histogram-1.png" /></p>
+</div>
+<div id="calculate-the-mean-and-median-of-the-total-number-of-steps-taken-per-day" class="section level3">
+<h3>Calculate the mean and median of the total number of steps taken per day</h3>
+<pre class="r"><code>meanValue &lt;- mean(StepsPerDay$steps)
+
+medianValue &lt;- median(StepsPerDay$steps)</code></pre>
+<p>The mean of the total number of steps taken per day is <strong>9354.2295082</strong>.<br />The median of the total number of steps taken per day is <strong>10395</strong>.</p>
+</div>
+</div>
+<div id="what-is-the-average-daily-activity-pattern" class="section level2">
+<h2>What is the average daily activity pattern?</h2>
+</div>
+<div id="imputing-missing-values" class="section level2">
+<h2>Imputing missing values</h2>
+<p>Note that there are a number of days/intervals where there are missing values (coded as <strong>NA</strong>). The presence of missing days may introduce bias into some calculations or summaries of the data.</p>
+</div>
+<div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
+<h2>Are there differences in activity patterns between weekdays and weekends?</h2>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
