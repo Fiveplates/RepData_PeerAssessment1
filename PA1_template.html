@@ -13,10 +13,11 @@
 <title>Reproducible Research: Peer Assessment 1</title>
 
 <script src="PA1_template_files/jquery-1.11.0/jquery.min.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link href="PA1_template_files/bootstrap-2.3.2/css/bootstrap.min.css" rel="stylesheet" />
-<link href="PA1_template_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
-<script src="PA1_template_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="PA1_template_files/bootstrap-3.3.1/css/bootstrap.min.css" rel="stylesheet" />
+<script src="PA1_template_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="PA1_template_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="PA1_template_files/bootstrap-3.3.1/shim/respond.min.js"></script>
 
 <style type="text/css">code{white-space: pre;}</style>
 <link rel="stylesheet"
@@ -48,6 +49,14 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
   margin-left: auto;
   margin-right: auto;
 }
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
 </style>
 <div class="container-fluid main-container">
 
@@ -57,10 +66,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </div>
 
 
-<pre class="r"><code>library(knitr)
-opts_chunk$set(fig.path=&quot;figure/&quot;)</code></pre>
-<div id="loading-and-preprocessing-the-data" class="section level2">
-<h2>Loading and preprocessing the data</h2>
+<p>This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.</p>
 <div id="data" class="section level3">
 <h3>Data</h3>
 <p>The data for this assignment can be downloaded from the course web site:</p>
@@ -74,61 +80,138 @@ opts_chunk$set(fig.path=&quot;figure/&quot;)</code></pre>
 <li>interval: Identifier for the 5-minute interval in which measurement was taken</li>
 </ul>
 <p>The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.</p>
+<p>Load the packages and options required for the R scripts.</p>
+<pre class="r"><code>library(knitr)
+library(ggplot2)
+library(data.table)
+library(plyr)
+require(scales)</code></pre>
+<pre><code>## Loading required package: scales</code></pre>
+<pre class="r"><code>opts_chunk$set(fig.path=&quot;figure/&quot;)</code></pre>
 </div>
-<div id="loading-the-activity-monitoring-data" class="section level3">
-<h3>Loading the activity monitoring data</h3>
-<pre class="r"><code>ActivityData &lt;- read.csv(file = &quot;./data/activity.csv&quot;, stringsAsFactors = FALSE)
+<div id="loading-and-preprocessing-the-data" class="section level2">
+<h2>Loading and preprocessing the data</h2>
+<div id="load-the-data" class="section level3">
+<h3>Load the data</h3>
+<p>First the file is downloaded and unzipped in a folder called “data” in the current working directory of R; which is a prerequsite, prior to loading and processing the data.</p>
+<p>The CSV file is imported into a data frame (named - “activityData”), and using the “colClasses” argument to specify the data type for each column.</p>
+<pre class="r"><code>classes &lt;- c(&quot;integer&quot;, &quot;Date&quot;, &quot;integer&quot; )
+activityData &lt;- read.csv(file = &quot;./data/activity.csv&quot;, stringsAsFactors = FALSE, colClasses = classes)
 
-summary(ActivityData)</code></pre>
-<pre><code>##      steps            date              interval     
-##  Min.   :  0.00   Length:17568       Min.   :   0.0  
-##  1st Qu.:  0.00   Class :character   1st Qu.: 588.8  
-##  Median :  0.00   Mode  :character   Median :1177.5  
-##  Mean   : 37.38                      Mean   :1177.5  
-##  3rd Qu.: 12.00                      3rd Qu.:1766.2  
-##  Max.   :806.00                      Max.   :2355.0  
+summary(activityData)</code></pre>
+<pre><code>##      steps             date               interval     
+##  Min.   :  0.00   Min.   :2012-10-01   Min.   :   0.0  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   1st Qu.: 588.8  
+##  Median :  0.00   Median :2012-10-31   Median :1177.5  
+##  Mean   : 37.38   Mean   :2012-10-31   Mean   :1177.5  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   3rd Qu.:1766.2  
+##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0  
 ##  NA&#39;s   :2304</code></pre>
-<pre class="r"><code>str(ActivityData)</code></pre>
+<pre class="r"><code>str(activityData)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    17568 obs. of  3 variables:
 ##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ date    : chr  &quot;2012-10-01&quot; &quot;2012-10-01&quot; &quot;2012-10-01&quot; &quot;2012-10-01&quot; ...
+##  $ date    : Date, format: &quot;2012-10-01&quot; &quot;2012-10-01&quot; ...
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...</code></pre>
 </div>
-<div id="processing-the-activity-monitoring-data" class="section level3">
-<h3>Processing the activity monitoring data</h3>
-<p>The date variable in the Activity Monitoring Data is loaded from the csv file as character (chr), convert to a date (Date) format</p>
-<pre class="r"><code>ActivityData$date &lt;- as.Date(ActivityData$date, format = &quot;%Y-%m-%d&quot;)</code></pre>
+<div id="processtransform-the-data" class="section level3">
+<h3>Process/transform the data</h3>
+<p>Process/transform the data into a suitable format for analysis. The existing “interval” column in the data frame identifies the 5-minute interval in which measurement was taken, and is an integer value. Add a new column which converts the “interval” column into a time format (human readable).</p>
+<pre class="r"><code>intervalCol &lt;- activityData$interval
+activityData$timeInterval &lt;- sprintf(&quot;%02d:%02d&quot;, intervalCol%/%100, intervalCol%%100)</code></pre>
 </div>
 </div>
 <div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
 <h2>What is mean total number of steps taken per day?</h2>
 <div id="calculate-the-total-number-of-steps-taken-per-day" class="section level3">
 <h3>Calculate the total number of steps taken per day</h3>
-<pre class="r"><code>StepsPerDay &lt;- aggregate(ActivityData$steps, by = list(ActivityData$date), FUN = sum, na.rm = TRUE)
+<p>Use the aggregate function to calculate the total number of steps for each day (by date), saving the result to a data set called “stepsPerDay”; then using the setnames function, from the data.tables package, to set the column names.</p>
+<p><strong>Note: Missing values in the data set are ignored.</strong></p>
+<pre class="r"><code>stepsPerDay &lt;- aggregate(activityData$steps, by = list(activityData$date), FUN = sum, na.rm = TRUE)
 
-library(data.table)
-### Set the column names
-setnames(StepsPerDay, c(&quot;date&quot;, &quot;steps&quot;))</code></pre>
+setnames(stepsPerDay, c(&quot;date&quot;, &quot;steps&quot;))</code></pre>
 </div>
 <div id="histogram-of-the-total-number-of-steps-taken-per-day" class="section level3">
 <h3>Histogram of the total number of steps taken per day</h3>
-<pre class="r"><code>hist(StepsPerDay$steps, col = &quot;red&quot;, main = &quot;Total Number of Steps taken Each Day&quot;, xlab = &quot;Steps&quot;)</code></pre>
-<p><img src="figure/Histogram-1.png" /></p>
+<p>Take the data set “stepsPerDay” to be plotted, pass the “steps” column from the “stepsPerDay” data set as values on the x-axis and compute a histogram of this:</p>
+<pre class="r"><code>ggplot(stepsPerDay, aes(x = (steps))) + 
+        labs( x = &quot;Steps&quot;, y = &quot;Frequency&quot;, title = &quot;Steps taken per day&quot;) + 
+        geom_histogram(binwidth = 3000 ,aes(fill = ..count..))</code></pre>
+<p><img src="figure/histogram-1.png" /></p>
 </div>
 <div id="calculate-the-mean-and-median-of-the-total-number-of-steps-taken-per-day" class="section level3">
 <h3>Calculate the mean and median of the total number of steps taken per day</h3>
-<pre class="r"><code>meanValue &lt;- mean(StepsPerDay$steps)
+<pre class="r"><code>summary(stepsPerDay)</code></pre>
+<pre><code>##       date                steps      
+##  Min.   :2012-10-01   Min.   :    0  
+##  1st Qu.:2012-10-16   1st Qu.: 6778  
+##  Median :2012-10-31   Median :10395  
+##  Mean   :2012-10-31   Mean   : 9354  
+##  3rd Qu.:2012-11-15   3rd Qu.:12811  
+##  Max.   :2012-11-30   Max.   :21194</code></pre>
+<pre class="r"><code>meanValue &lt;- mean(stepsPerDay$steps)
 
-medianValue &lt;- median(StepsPerDay$steps)</code></pre>
+medianValue &lt;- median(stepsPerDay$steps)</code></pre>
 <p>The mean of the total number of steps taken per day is <strong>9354.2295082</strong>.<br />The median of the total number of steps taken per day is <strong>10395</strong>.</p>
 </div>
 </div>
 <div id="what-is-the-average-daily-activity-pattern" class="section level2">
 <h2>What is the average daily activity pattern?</h2>
+<p>First step - Create a data set containing the mean of the steps for each five minute interval.</p>
+<p><strong>Note: Missing values in the data set are ignored.</strong></p>
+<pre class="r"><code>avgStepsByInterval &lt;- ddply(activityData, .(timeInterval), summarise, avgSteps=mean(steps, na.rm = TRUE))
+
+summary(avgStepsByInterval)</code></pre>
+<pre><code>##  timeInterval          avgSteps      
+##  Length:288         Min.   :  0.000  
+##  Class :character   1st Qu.:  2.486  
+##  Mode  :character   Median : 34.113  
+##                     Mean   : 37.383  
+##                     3rd Qu.: 52.835  
+##                     Max.   :206.170</code></pre>
+<div id="time-series-plot-of-the-5-minute-interval-x-axis-and-the-average-number-of-steps-taken-averaged-across-days-y-axis." class="section level3">
+<h3>Time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across days (y-axis).</h3>
+<pre class="r"><code>### Set the labels for the title, x-axis and y-axis
+mainLab &lt;- &quot;The Average Steps By Time Interval&quot;
+xLab &lt;- &quot;Time Intervals&quot;
+yLab &lt;- &quot;Average Number of Steps Taken&quot;
+
+ggplot( data = avgStepsByInterval, aes(x = strptime(timeInterval, format=&quot;%H:%M&quot;), y = avgSteps)) + 
+        geom_line() + 
+        labs(title = mainLab, x = xLab, y = yLab) + 
+        scale_x_datetime(labels = date_format(&quot;%H:%M&quot;),breaks = date_breaks(&quot;2 hour&quot;))</code></pre>
+<p><img src="figure/timeSeriesPlot-1.png" /></p>
+</div>
+<div id="identifying-the-5-minute-interval-on-average-across-all-the-days-in-the-data-set-that-contains-the-maximum-number-of-steps." class="section level3">
+<h3>Identifying the 5-minute interval, on average across all the days in the data set, that contains the maximum number of steps.</h3>
+<pre class="r"><code>maxAVGStepsInt &lt;- avgStepsByInterval[which.max(avgStepsByInterval$avgSteps), ]
+maxAVGStepsInt</code></pre>
+<pre><code>##     timeInterval avgSteps
+## 104        08:35 206.1698</code></pre>
+</div>
 </div>
 <div id="imputing-missing-values" class="section level2">
 <h2>Imputing missing values</h2>
 <p>Note that there are a number of days/intervals where there are missing values (coded as <strong>NA</strong>). The presence of missing days may introduce bias into some calculations or summaries of the data.</p>
+<div id="calculating-and-reporting-the-total-number-of-missing-values-in-the-activitydata-data-set---i.e.the-total-number-of-rows-with-nas." class="section level3">
+<h3>Calculating and reporting the total number of missing values in the ‘activityData’ data set - i.e. the total number of rows with NAs.</h3>
+<pre class="r"><code>summary(activityData)</code></pre>
+<pre><code>##      steps             date               interval      timeInterval      
+##  Min.   :  0.00   Min.   :2012-10-01   Min.   :   0.0   Length:17568      
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   1st Qu.: 588.8   Class :character  
+##  Median :  0.00   Median :2012-10-31   Median :1177.5   Mode  :character  
+##  Mean   : 37.38   Mean   :2012-10-31   Mean   :1177.5                     
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   3rd Qu.:1766.2                     
+##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0                     
+##  NA&#39;s   :2304</code></pre>
+<pre class="r"><code>missingValues &lt;- sum(is.na(activityData$steps))
+missingValues#</code></pre>
+<pre><code>## [1] 2304</code></pre>
+<p>The total number of missing values in the activityData data set is <strong>2304</strong>.</p>
+</div>
+<div id="strategy-for-filling-in-all-of-the-missing-values-in-the-dataset." class="section level3">
+<h3>Strategy for filling in all of the missing values in the dataset.</h3>
+<p>The mean of the 5-minute interval is used to fill in the missing values (NAs) from the ‘activityData’ data set. This is incorporated into a new data set called ‘fillNAs’.</p>
+</div>
 </div>
 <div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
